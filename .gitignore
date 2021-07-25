@@ -6,3 +6,5 @@ obj/
 .config/
 
 public/bundle.js
+
+src/*.js
