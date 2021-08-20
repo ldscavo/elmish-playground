@@ -12,10 +12,22 @@ type Event =
     | Increment
     | Decrement
     | IncrementDelayed
+    | DecrementDelayed
 
 let init () =
     { Count = 0
       Loading = false }, Cmd.none
+
+let delayedEvent (delay: int) event =
+    let cmd dispatch = 
+        let delayedDispatch = async {
+            do! Async.Sleep delay
+            dispatch event
+        }
+
+        Async.StartImmediate delayedDispatch
+
+    Cmd.ofSub cmd
 
 let update event state =
     match event with
@@ -27,16 +39,14 @@ let update event state =
         { state with
             Loading = false
             Count = state.Count - 1 }, Cmd.none
-    | IncrementDelayed when state.Loading -> state, Cmd.none
-    | IncrementDelayed ->
-        let cmd dispatch = 
-            let delayedDispatch = async {
-                do! Async.Sleep 750
-                dispatch Increment
-            }
-            Async.StartImmediate delayedDispatch
-            
-        { state with Loading = true }, Cmd.ofSub cmd
+    | IncrementDelayed when state.Loading ->
+        state, Cmd.none
+    | IncrementDelayed ->                   
+        { state with Loading = true }, delayedEvent 500 Increment
+    | DecrementDelayed when state.Loading ->
+        state, Cmd.none
+    | DecrementDelayed ->
+        { state with Loading = true }, delayedEvent 2500 Decrement
 
 let render state dispatch =
     Html.div [
@@ -57,6 +67,11 @@ let render state dispatch =
             prop.disabled state.Loading
             prop.onClick (fun _ -> dispatch IncrementDelayed)
             prop.text "Increment, but slowly"
+        ]
+        Html.button [
+            prop.disabled state.Loading
+            prop.onClick (fun _ -> dispatch DecrementDelayed)
+            prop.text "Decrement even S L O W E R"
         ]
     ]
 
