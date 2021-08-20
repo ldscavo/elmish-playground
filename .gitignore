@@ -8,3 +8,5 @@ obj/
 public/bundle.js
 
 src/*.js
+.fake
+.ionide

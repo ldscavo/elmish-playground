@@ -12,32 +12,26 @@ type Event =
     | Decrement
 
 let init () =
-    { Count = 0 }
+    { Count = 0 }, Cmd.none
 
 let update event state =
     match event with
-    | Increment -> { state with Count = state.Count + 1 }
-    | Decrement -> { state with Count = state.Count - 1 }
+    | Increment -> { state with Count = state.Count + 1 }, Cmd.none
+    | Decrement -> { state with Count = state.Count - 1 }, Cmd.none
 
 let render state dispatch =
     Html.div [
-        Html.button [
-            prop.onClick (fun _ -> dispatch Increment)
-            prop.text "Increment"
-        ]
-
-        Html.div state.Count
-
+        Html.h1 state.Count
         Html.button [
             prop.onClick (fun _ -> dispatch Decrement)
             prop.text "Decrement"
         ]
-        
-        match state.Count with
-        | 0 -> Html.none
-        | _ -> Html.h1 (if state.Count % 2 = 0 then "Count is even" else "Count is odd")
+        Html.button [
+            prop.onClick (fun _ -> dispatch Increment)
+            prop.text "Increment"
+        ]
     ]
 
-Program.mkSimple init update render
+Program.mkProgram init update render
 |> Program.withReactSynchronous "app"
 |> Program.run
