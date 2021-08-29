@@ -4,76 +4,86 @@ open Elmish
 open Elmish.React
 open Feliz
 
+type Page = 
+    | Counter
+    | TextInput
+
 type State =
     { Count: int
-      Loading: bool }
+      Text: string
+      IsUpperCase: bool
+      Page: Page }
 
 type Event =
     | Increment
     | Decrement
-    | IncrementDelayed
-    | DecrementDelayed
+    | InputTextChanged of string
+    | UpperCaseToggled of bool
+    | PageChanged of Page
 
 let init () =
     { Count = 0
-      Loading = false }, Cmd.none
-
-let delayedEvent (delay: int) event =
-    let cmd dispatch = 
-        let delayedDispatch = async {
-            do! Async.Sleep delay
-            dispatch event
-        }
-
-        Async.StartImmediate delayedDispatch
-
-    Cmd.ofSub cmd
+      Text = "Snog in the Shrubbery"
+      IsUpperCase = false
+      Page = Counter }, Cmd.none
 
 let update event state =
     match event with
-    | Increment ->
-        { state with
-            Loading = false
-            Count = state.Count + 1 }, Cmd.none
-    | Decrement ->
-        { state with
-            Loading = false
-            Count = state.Count - 1 }, Cmd.none
-    | IncrementDelayed when state.Loading ->
-        state, Cmd.none
-    | IncrementDelayed ->                   
-        { state with Loading = true }, delayedEvent 500 Increment
-    | DecrementDelayed when state.Loading ->
-        state, Cmd.none
-    | DecrementDelayed ->
-        { state with Loading = true }, delayedEvent 2500 Decrement
+    | Increment -> { state with Count = state.Count + 1 }, Cmd.none
+    | Decrement -> { state with Count = state.Count - 1 }, Cmd.none
+    | InputTextChanged text -> { state with Text = text }, Cmd.none
+    | UpperCaseToggled isUpper -> { state with IsUpperCase = isUpper }, Cmd.none
+    | PageChanged page -> { state with Page = page }, Cmd.none
 
-let render state dispatch =
+let counterPage state dispatch =
     Html.div [
-        if (not state.Loading)
-            then Html.h1 state.Count
-            else Html.h1 "LOADING"
         Html.button [
-            prop.disabled state.Loading
+            prop.text "Show text page"
+            prop.onClick (fun _ -> dispatch (PageChanged TextInput))
+        ]
+        Html.hr []
+        Html.button [
+            prop.text "-"
             prop.onClick (fun _ -> dispatch Decrement)
-            prop.text "Decrement"
         ]
+        Html.h1 state.Count
         Html.button [
-            prop.disabled state.Loading
+            prop.text "+"
             prop.onClick (fun _ -> dispatch Increment)
-            prop.text "Increment"
-        ]
-        Html.button [
-            prop.disabled state.Loading
-            prop.onClick (fun _ -> dispatch IncrementDelayed)
-            prop.text "Increment, but slowly"
-        ]
-        Html.button [
-            prop.disabled state.Loading
-            prop.onClick (fun _ -> dispatch DecrementDelayed)
-            prop.text "Decrement even S L O W E R"
         ]
     ]
+
+let textPage state dispatch =
+    Html.div [
+        Html.button [
+            prop.text "Show counter page"
+            prop.onClick (fun _ -> dispatch (PageChanged Counter))
+        ]
+        Html.hr []
+        Html.input [
+            prop.valueOrDefault state.Text
+            prop.onChange (InputTextChanged >> dispatch)
+        ]
+        Html.input [
+            prop.id "uppercase-toggle"
+            prop.type'.checkbox
+            prop.isChecked state.IsUpperCase
+            prop.onChange (UpperCaseToggled >> dispatch)
+        ]
+        Html.label [
+            prop.htmlFor "uppercase-toggle"
+            prop.text "Uppercase?"
+        ]
+        Html.h1
+            (if state.IsUpperCase
+                then state.Text.ToUpper()
+                else state.Text)
+    ]
+
+let render state dispatch =
+    match state.Page with
+    | Counter -> counterPage state dispatch
+    | TextInput -> textPage state dispatch
 
 Program.mkProgram init update render
 |> Program.withReactSynchronous "app"
