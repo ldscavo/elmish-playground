@@ -21,18 +21,20 @@ type Event =
 let init () =
     { CounterState = Counter.init ()
       TextInputState = TextInput.init ()
-      Page = Counter }
+      Page = Counter }, Cmd.none
 
 let update event state =
     match event with
     | SwitchPage page ->
-        { state with Page = page }
+        { state with Page = page }, Cmd.none
     | CounterEvent evnt ->
+        let (counter, cmd) = Counter.update evnt state.CounterState
+        let appCmd = cmd |> Cmd.map CounterEvent
         { state with
-            CounterState = Counter.update evnt state.CounterState }
+            CounterState = counter }, appCmd
     | TextEvent evnt ->
         { state with
-            TextInputState = TextInput.update evnt state.TextInputState }
+            TextInputState = TextInput.update evnt state.TextInputState }, Cmd.none
 
 let render state dispatch =
     let counterDispatch event =
@@ -57,6 +59,6 @@ let render state dispatch =
     ]
     
 
-Program.mkSimple init update render
+Program.mkProgram init update render
 |> Program.withReactSynchronous "app"
 |> Program.run
