@@ -10,29 +10,29 @@ type Page =
 
 type State =
     { CounterState: Counter.State
-      TextState: TextInput.State
+      TextInputState: TextInput.State
       Page: Page }
 
 type Event =
     | CounterEvent of Counter.Event
     | TextEvent of TextInput.Event
-    | PageChanged of Page
+    | SwitchPage of Page
 
 let init () =
     { CounterState = Counter.init ()
-      TextState = TextInput.init ()
+      TextInputState = TextInput.init ()
       Page = Counter }
 
 let update event state =
     match event with
-    | PageChanged page ->
+    | SwitchPage page ->
         { state with Page = page }
     | CounterEvent evnt ->
         { state with
             CounterState = Counter.update evnt state.CounterState }
     | TextEvent evnt ->
         { state with
-            TextState = TextInput.update evnt state.TextState }
+            TextInputState = TextInput.update evnt state.TextInputState }
 
 let render state dispatch =
     let counterDispatch event =
@@ -44,16 +44,16 @@ let render state dispatch =
     Html.div [
         Html.button [
             prop.text "Show counter page"
-            prop.onClick (fun _ -> dispatch (PageChanged Counter))
+            prop.onClick (fun _ -> dispatch (SwitchPage Counter))
         ]
         Html.button [
             prop.text "Show text page"
-            prop.onClick (fun _ -> dispatch (PageChanged TextInput))
+            prop.onClick (fun _ -> dispatch (SwitchPage TextInput))
         ]
         Html.hr []
         match state.Page with
         | Counter -> Counter.render state.CounterState counterDispatch
-        | TextInput -> TextInput.render state.TextState textDispatch
+        | TextInput -> TextInput.render state.TextInputState textDispatch
     ]
     
 
