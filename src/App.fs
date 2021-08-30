@@ -27,11 +27,12 @@ let update event state =
     match event with
     | SwitchPage page ->
         { state with Page = page }, Cmd.none
+
     | CounterEvent evnt ->
         let (counter, cmd) = Counter.update evnt state.CounterState
-        let appCmd = cmd |> Cmd.map CounterEvent
         { state with
-            CounterState = counter }, appCmd
+            CounterState = counter }, Cmd.map CounterEvent cmd
+
     | TextEvent evnt ->
         { state with
             TextInputState = TextInput.update evnt state.TextInputState }, Cmd.none
