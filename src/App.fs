@@ -8,40 +8,64 @@ type Page =
     | Counter
     | TextInput
 
+type CounterState =
+    { Count: int }
+
+type TextState =
+    { Text: string
+      IsUpperCase: bool }
+
 type State =
-    { Count: int
-      Text: string
-      IsUpperCase: bool
+    { CounterState: CounterState
+      TextState: TextState
       Page: Page }
 
-type Event =
+type CounterEvent = 
     | Increment
     | Decrement
-    | InputTextChanged of string
-    | UpperCaseToggled of bool
+
+type TextEvent =
+    | ChangeText of string
+    | ToggleUpperCase of bool
+
+type Event =
+    | CounterEvent of CounterEvent
+    | TextEvent of TextEvent
     | PageChanged of Page
 
+let initCounter () =
+    { Count = 0 }
+
+let initText () =
+    { Text = "Snog in the Shrubbery!"
+      IsUpperCase = false }
+
 let init () =
-    { Count = 0
-      Text = "Snog in the Shrubbery"
-      IsUpperCase = false
-      Page = Counter }, Cmd.none
+    { CounterState = initCounter ()
+      TextState = initText ()
+      Page = Counter }
+
+let updateCounter event state =
+    match event with
+    | Increment -> { state with Count = state.Count + 1 }
+    | Decrement -> { state with Count = state.Count - 1 }
+
+let updateText event state =
+    match event with
+    | ChangeText text -> { state with Text = text }
+    | ToggleUpperCase isUpper -> { state with IsUpperCase = isUpper }
 
 let update event state =
     match event with
-    | Increment -> { state with Count = state.Count + 1 }, Cmd.none
-    | Decrement -> { state with Count = state.Count - 1 }, Cmd.none
-    | InputTextChanged text -> { state with Text = text }, Cmd.none
-    | UpperCaseToggled isUpper -> { state with IsUpperCase = isUpper }, Cmd.none
-    | PageChanged page -> { state with Page = page }, Cmd.none
+    | PageChanged page ->
+        { state with Page = page }
+    | CounterEvent evnt ->
+        { state with CounterState = updateCounter evnt state.CounterState }
+    | TextEvent evnt ->
+        { state with TextState = updateText evnt state.TextState }
 
 let counterPage state dispatch =
     Html.div [
-        Html.button [
-            prop.text "Show text page"
-            prop.onClick (fun _ -> dispatch (PageChanged TextInput))
-        ]
-        Html.hr []
         Html.button [
             prop.text "-"
             prop.onClick (fun _ -> dispatch Decrement)
@@ -54,21 +78,16 @@ let counterPage state dispatch =
     ]
 
 let textPage state dispatch =
-    Html.div [
-        Html.button [
-            prop.text "Show counter page"
-            prop.onClick (fun _ -> dispatch (PageChanged Counter))
-        ]
-        Html.hr []
+    Html.div [        
         Html.input [
             prop.valueOrDefault state.Text
-            prop.onChange (InputTextChanged >> dispatch)
+            prop.onChange (ChangeText >> dispatch)
         ]
         Html.input [
             prop.id "uppercase-toggle"
             prop.type'.checkbox
             prop.isChecked state.IsUpperCase
-            prop.onChange (UpperCaseToggled >> dispatch)
+            prop.onChange (ToggleUpperCase >> dispatch)
         ]
         Html.label [
             prop.htmlFor "uppercase-toggle"
@@ -81,10 +100,28 @@ let textPage state dispatch =
     ]
 
 let render state dispatch =
-    match state.Page with
-    | Counter -> counterPage state dispatch
-    | TextInput -> textPage state dispatch
+    let counterDispatch event =
+        dispatch (Event.CounterEvent event)
 
-Program.mkProgram init update render
+    let textDispatch event =
+        dispatch (Event.TextEvent event)
+
+    Html.div [
+        Html.button [
+            prop.text "Show counter page"
+            prop.onClick (fun _ -> dispatch (PageChanged Counter))
+        ]
+        Html.button [
+            prop.text "Show text page"
+            prop.onClick (fun _ -> dispatch (PageChanged TextInput))
+        ]
+        Html.hr []
+        match state.Page with
+        | Counter -> counterPage state.CounterState counterDispatch
+        | TextInput -> textPage state.TextState textDispatch
+    ]
+    
+
+Program.mkSimple init update render
 |> Program.withReactSynchronous "app"
 |> Program.run
