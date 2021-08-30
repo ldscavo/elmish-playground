@@ -17,8 +17,11 @@ let init () =
   
 let update event state =
     match event with
-    | ChangeText text -> { state with Text = text }
-    | ToggleUpperCase isUpper -> { state with IsUpperCase = isUpper }
+    | ChangeText text ->
+        { state with Text = text }
+        
+    | ToggleUpperCase isUpper ->
+        { state with IsUpperCase = isUpper }
 
 let render state dispatch =
     Html.div [        

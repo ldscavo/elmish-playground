@@ -17,8 +17,12 @@ let init () =
 
 let update event state =
     match event with
-    | Increment -> { state with Count = state.Count + 1 }, Cmd.none
-    | Decrement -> { state with Count = state.Count - 1 }, Cmd.none
+    | Increment ->
+        { state with Count = state.Count + 1 }, Cmd.none
+
+    | Decrement ->
+        { state with Count = state.Count - 1 }, Cmd.none
+        
     | IncrementDelayed ->
         let delayedIncrement = async {
             do! Async.Sleep 1000
