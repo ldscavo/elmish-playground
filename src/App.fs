@@ -8,47 +8,32 @@ type Page =
     | Counter
     | TextInput
 
-type CounterState =
-    { Count: int }
-
 type TextState =
     { Text: string
       IsUpperCase: bool }
 
 type State =
-    { CounterState: CounterState
+    { CounterState: Counter.State
       TextState: TextState
       Page: Page }
-
-type CounterEvent = 
-    | Increment
-    | Decrement
 
 type TextEvent =
     | ChangeText of string
     | ToggleUpperCase of bool
 
 type Event =
-    | CounterEvent of CounterEvent
+    | CounterEvent of Counter.Event
     | TextEvent of TextEvent
     | PageChanged of Page
-
-let initCounter () =
-    { Count = 0 }
 
 let initText () =
     { Text = "Snog in the Shrubbery!"
       IsUpperCase = false }
 
 let init () =
-    { CounterState = initCounter ()
+    { CounterState = Counter.init ()
       TextState = initText ()
       Page = Counter }
-
-let updateCounter event state =
-    match event with
-    | Increment -> { state with Count = state.Count + 1 }
-    | Decrement -> { state with Count = state.Count - 1 }
 
 let updateText event state =
     match event with
@@ -60,22 +45,9 @@ let update event state =
     | PageChanged page ->
         { state with Page = page }
     | CounterEvent evnt ->
-        { state with CounterState = updateCounter evnt state.CounterState }
+        { state with CounterState = Counter.update evnt state.CounterState }
     | TextEvent evnt ->
         { state with TextState = updateText evnt state.TextState }
-
-let counterPage state dispatch =
-    Html.div [
-        Html.button [
-            prop.text "-"
-            prop.onClick (fun _ -> dispatch Decrement)
-        ]
-        Html.h1 state.Count
-        Html.button [
-            prop.text "+"
-            prop.onClick (fun _ -> dispatch Increment)
-        ]
-    ]
 
 let textPage state dispatch =
     Html.div [        
@@ -117,7 +89,7 @@ let render state dispatch =
         ]
         Html.hr []
         match state.Page with
-        | Counter -> counterPage state.CounterState counterDispatch
+        | Counter -> Counter.render state.CounterState counterDispatch
         | TextInput -> textPage state.TextState textDispatch
     ]
     
