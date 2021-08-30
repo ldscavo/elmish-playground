@@ -1,3 +1,4 @@
+[<RequireQualifiedAccess>]
 module TextInput
 
 open Feliz
