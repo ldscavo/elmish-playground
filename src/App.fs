@@ -38,12 +38,6 @@ let update event state =
             TextInputState = TextInput.update evnt state.TextInputState }, Cmd.none
 
 let render state dispatch =
-    let counterDispatch event =
-        dispatch (CounterEvent event)
-
-    let textDispatch event =
-        dispatch (TextEvent event)
-
     Html.div [
         Html.button [
             prop.text "Show counter page"
@@ -55,8 +49,8 @@ let render state dispatch =
         ]
         Html.hr []
         match state.Page with
-        | Counter -> Counter.render state.CounterState counterDispatch
-        | TextInput -> TextInput.render state.TextInputState textDispatch
+        | Counter -> Counter.render state.CounterState (CounterEvent >> dispatch)
+        | TextInput -> TextInput.render state.TextInputState (TextEvent >> dispatch)
     ]
     
 
