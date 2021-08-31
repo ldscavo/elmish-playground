@@ -1,6 +1,6 @@
 # Elmish Playground
 
-This is a small breakable Fable/Elmish project I'm using to experiment and tinker with this stack.
+This is a small breakable Fable/Elmish project for experimentation and tinkering
 
 ## Requirements
 
